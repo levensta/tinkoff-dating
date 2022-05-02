@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "airbnb",
+    "airbnb-typescript",
+    "react-app",
+    "react-app/jest"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "ignorePatterns": ["react-app-env.d.ts", "reportWebVitals.ts", "setupTests.ts"],
+  "rules":  {
+    "react/jsx-filename-extension": [2, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }]
+  }
+}
