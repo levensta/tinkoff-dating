@@ -1,23 +1,22 @@
 import React from 'react';
 
-import {useAuth} from "../hooks/useAuth";
 import {Navigate} from "react-router-dom";
-import {removeUser} from "../store/slices/userSlice";
-import {useAppDispatch} from "../hooks/redux-hooks";
+import {getAuth, signOut} from "firebase/auth";
 
 const HomePage = () => {
-  const {isAuth, email} = useAuth();
-  const dispatch = useAppDispatch();
+  const auth = getAuth();
 
   const handleLogOut = () => {
-    dispatch(removeUser());
-  }
+    signOut(auth)
+      .then(r => r)
+      .catch();
+  };
 
-  return isAuth ? (
+  return auth.currentUser ? (
     <div>
       <h1>Welcome</h1>
       <button onClick={handleLogOut}>
-        Log Out from {email}
+        Log Out
       </button>
     </div>
   ) : (
