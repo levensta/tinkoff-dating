@@ -1,8 +1,8 @@
 import {getAuth, createUserWithEmailAndPassword, sendEmailVerification} from "firebase/auth";
-import Form from "./Form";
+import AuthForm from "./AuthForm";
 
 import React from 'react';
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 
 const SignUp = () => {
   const navigate = useNavigate()
@@ -19,10 +19,16 @@ const SignUp = () => {
   }
 
   return (
-    <Form
-      title={"Sign Up"}
-      handleClick={handleRegister}
-    />
+    <>
+      <h1 className={"text-2xl font-medium"}>Регистрация</h1>
+      <AuthForm
+        title={"Продолжить"}
+        handleClick={handleRegister}
+      />
+      <p>
+        Уже есть аккаунт? <Link to="/login" className={"pb-1 text-blue-500 hover:text-blue-700 hover:border-b hover:border-b-blue-700 transition-all"}>Войдите</Link>
+      </p>
+    </>
   );
 };
 

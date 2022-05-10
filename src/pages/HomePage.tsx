@@ -1,6 +1,5 @@
 import React from 'react';
 
-import {Navigate} from "react-router-dom";
 import {getAuth, signOut} from "firebase/auth";
 
 const HomePage = () => {
@@ -12,16 +11,14 @@ const HomePage = () => {
       .catch();
   };
 
-  return auth.currentUser ? (
+  return (
     <div>
       <h1>Welcome</h1>
       <button onClick={handleLogOut}>
         Log Out
       </button>
     </div>
-  ) : (
-    <Navigate to="/login" />
-  )
+  );
 };
 
 export default HomePage;

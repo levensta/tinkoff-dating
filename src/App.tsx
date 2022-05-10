@@ -1,15 +1,22 @@
 import React from 'react';
-import {Routes, Route} from "react-router-dom";
+
 import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+import AuthPage from "./pages/AuthPage";
+import SignIn from "./components/SignIn";
+import SignUp from "./components/SignUp";
+
+import {Routes, Route, Navigate} from "react-router-dom";
+
+import {getAuth} from "firebase/auth";
 
 function App() {
+  const auth = getAuth();
+
   return (
     <Routes>
-      <Route path="/" element={<HomePage/>} />
-      <Route path="/login" element={<LoginPage/>} />
-      <Route path="/register" element={<RegisterPage/>} />
+      <Route path="/" element={auth.currentUser ? <HomePage/> : <Navigate to="/login" />} />
+      <Route path="/login" element={<AuthPage children={<SignIn/>} />} />
+      <Route path="/register" element={<AuthPage children={<SignUp/>} />} />
     </Routes>
   );
 }

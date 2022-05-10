@@ -5,7 +5,7 @@ interface FormProps {
   handleClick: (email: string, pass: string) => void,
 }
 
-const Form: React.FC<FormProps> = ({title, handleClick}) => {
+const AuthForm: React.FC<FormProps> = ({title, handleClick}) => {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
 
@@ -22,24 +22,29 @@ const Form: React.FC<FormProps> = ({title, handleClick}) => {
   }
 
   return (
-    <div>
+    <div className={"flex flex-col py-3"}>
       <input
         type="email"
         value={email}
         onChange={handleEmail}
-        placeholder="email"
+        placeholder="Email"
+        className={"p-3 my-3 outline-none rounded-sm bg-slate-100 hover:bg-slate-200 focus:bg-white focus:outline-1 focus:outline-stone-900 transition-all"}
       />
       <input
         type="password"
         value={pass}
         onChange={handlePass}
-        placeholder="password"
+        placeholder="Пароль"
+        className={"p-3 my-3 outline-none rounded-sm bg-slate-100 hover:bg-slate-200 focus:bg-white focus:outline-1 focus:outline-stone-900 transition-all"}
       />
-      <button onClick={handleButton}>
+      <button
+        onClick={handleButton}
+        className={"p-3 my-3 rounded-sm bg-yellow-400 hover:bg-amber-400 focus:bg-yellow-500 transition-all"}
+      >
         {title}
       </button>
     </div>
   );
 };
 
-export default Form;
+export default AuthForm;
