@@ -1,18 +1,31 @@
 import React from 'react';
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
+import {signInWithEmailAndPassword } from "firebase/auth";
+import {auth} from "../firebase";
+
 import AuthForm from "./AuthForm";
 import {Link, useNavigate} from "react-router-dom";
+import styles from "./elements.module.css";
 
 const SignIn = () => {
   const navigate = useNavigate()
 
   const handleLogin = (email: string, password: string) => {
-    const auth = getAuth();
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         navigate('/');
       })
-      .catch();
+      .catch(error => {
+        // save error messages in state?
+        switch (error.code) {
+          case 'auth/invalid-email':
+          case 'auth/user-disabled':
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          default:
+            return alert(error.message);
+        }
+      });
   }
 
   return (
@@ -20,10 +33,10 @@ const SignIn = () => {
       <h1 className={"text-2xl font-medium"}>Авторизуйтесь</h1>
       <AuthForm
         title={"Войти"}
-        handleClick={handleLogin}
+        handleAuth={handleLogin}
       />
       <p>
-        Нет аккаунта? <Link to="/register" className={"pb-1 text-blue-500 hover:text-blue-700 hover:border-b hover:border-b-blue-700 transition-all"}>Зарегистрируйтесь</Link>
+        Нет аккаунта? <Link to="/register" className={styles.link_underlined}>Зарегистрируйтесь</Link>
       </p>
     </>
   );

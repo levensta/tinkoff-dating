@@ -1,21 +1,31 @@
-import {getAuth, createUserWithEmailAndPassword, sendEmailVerification} from "firebase/auth";
-import AuthForm from "./AuthForm";
-
 import React from 'react';
+
+import {createUserWithEmailAndPassword, sendEmailVerification} from "firebase/auth";
+import {auth} from "../firebase";
+
+import AuthForm from "./AuthForm";
 import {Link, useNavigate} from "react-router-dom";
+import styles from "./elements.module.css";
 
 const SignUp = () => {
   const navigate = useNavigate()
 
   const handleRegister = (email: string, password: string) => {
-    const auth = getAuth();
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         sendEmailVerification(auth.currentUser!)
           .then(r => console.log(r));
         navigate('/');
       })
-      .catch();
+      .catch(error => {
+        // save error messages in state?
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+          case 'auth/weak-password':
+          default:
+            return alert(error.message);
+        }
+      });
   }
 
   return (
@@ -23,10 +33,10 @@ const SignUp = () => {
       <h1 className={"text-2xl font-medium"}>Регистрация</h1>
       <AuthForm
         title={"Продолжить"}
-        handleClick={handleRegister}
+        handleAuth={handleRegister}
       />
       <p>
-        Уже есть аккаунт? <Link to="/login" className={"pb-1 text-blue-500 hover:text-blue-700 hover:border-b hover:border-b-blue-700 transition-all"}>Войдите</Link>
+        Уже есть аккаунт? <Link to="/login" className={styles.link_underlined}>Войдите</Link>
       </p>
     </>
   );

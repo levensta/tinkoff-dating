@@ -1,49 +1,62 @@
-import React, {useState} from 'react';
+import React from 'react';
+import {SubmitHandler, useForm} from "react-hook-form";
 
-interface FormProps {
-  title: string,
-  handleClick: (email: string, pass: string) => void,
+import styles from './elements.module.css';
+import cn from 'classnames';
+
+interface IFormFields {
+  email: string,
+  pass: string
 }
 
-const AuthForm: React.FC<FormProps> = ({title, handleClick}) => {
-  const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+interface IFormProps {
+  title: string,
+  handleAuth: (email: string, pass: string) => void,
+}
 
-  const handleEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  }
+const AuthForm: React.FC<IFormProps> = ({title, handleAuth}) => {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<IFormFields>({
+    mode: 'onBlur'
+  });
 
-  const handlePass = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPass(e.target.value);
-  }
-
-  const handleButton = () => {
-    handleClick(email, pass);
+  const onSubmit: SubmitHandler<IFormFields> = (data) => {
+    handleAuth(data.email, data.pass);
   }
 
   return (
-    <div className={"flex flex-col py-3"}>
+    <form className={"flex flex-col w-full py-3"} onSubmit={handleSubmit(onSubmit)}>
       <input
-        type="email"
-        value={email}
-        onChange={handleEmail}
+        type="text"
+        {...register('email', {
+          required: true,
+          pattern: {
+            value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
+            message: 'Некорректный email'
+          }
+        })}
         placeholder="Email"
-        className={"p-3 my-3 outline-none rounded-sm bg-slate-100 hover:bg-slate-200 focus:bg-white focus:outline-1 focus:outline-stone-900 transition-all"}
+        className={cn(styles.input, "my-3")}
       />
+      {errors?.email && <span className={styles.msg_error} >{errors.email.message}</span>}
       <input
         type="password"
-        value={pass}
-        onChange={handlePass}
+        {...register('pass', {
+          required: true,
+        })}
         placeholder="Пароль"
-        className={"p-3 my-3 outline-none rounded-sm bg-slate-100 hover:bg-slate-200 focus:bg-white focus:outline-1 focus:outline-stone-900 transition-all"}
+        className={cn(styles.input, "my-3")}
       />
+      {errors?.pass && <span className={styles.msg_error} >{errors.pass.message}</span>}
       <button
-        onClick={handleButton}
-        className={"p-3 my-3 rounded-sm bg-yellow-400 hover:bg-amber-400 focus:bg-yellow-500 transition-all"}
+        className={cn(styles.btn, "my-3")}
       >
         {title}
       </button>
-    </div>
+    </form>
   );
 };
 

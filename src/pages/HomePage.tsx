@@ -1,14 +1,14 @@
 import React from 'react';
 
-import {getAuth, signOut} from "firebase/auth";
+import {signOut} from "firebase/auth";
+import {auth} from "../firebase";
 
 const HomePage = () => {
-  const auth = getAuth();
 
   const handleLogOut = () => {
     signOut(auth)
-      .then(r => r)
-      .catch();
+      .then(r => console.log(r))
+      .catch(err => console.log(err));
   };
 
   return (
