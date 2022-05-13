@@ -9,6 +9,7 @@ import {setIsLoading} from "../store/slices/userSlice";
 
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const dispatch = useAppDispatch();
 
@@ -16,9 +17,11 @@ export const useAuth = () => {
     const subscriber = onAuthStateChanged(auth, (userInfo) => {
       if (userInfo) {
         setIsLoggedIn(true);
+        setIsEmailVerified(userInfo.emailVerified);
         setUser(userInfo);
       } else {
         setIsLoggedIn(false);
+        setIsEmailVerified(false);
         setUser(null);
       }
       dispatch(setIsLoading(false));
@@ -31,5 +34,6 @@ export const useAuth = () => {
   return {
     user,
     isLoggedIn,
+    isEmailVerified,
   };
 }

@@ -4,7 +4,7 @@
 }
 
 .btn {
-  @apply p-3 rounded-sm bg-yellow-400 hover:bg-amber-400 focus:bg-yellow-500 transition-all
+  @apply p-3 rounded-sm bg-yellow-400 hover:bg-amber-400 focus:bg-yellow-500 disabled:bg-neutral-200 transition-all
 }
 
 .msg_error {

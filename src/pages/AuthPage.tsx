@@ -7,7 +7,7 @@ interface IAuthProps {
 const AuthPage: React.FC<IAuthProps> = ({children}) => {
   return (
     <main className={"flex justify-center items-center h-screen bg-gray-100"}>
-      <section className={"flex flex-col justify-center items-center min-w-[300px] w-full sm:w-[430px] p-10 bg-white rounded-xl shadow-gray-300"}>
+      <section className={"min-w-[300px] w-full sm:w-[430px] p-10 bg-white rounded-xl shadow-gray-300"}>
         {children}
       </section>
     </main>
