@@ -1,18 +1,16 @@
 import React, {useState} from 'react';
 
-import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
+import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile, updateCurrentUser} from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import {auth, db} from "../firebase";
 
-import {Link, useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
 import styles from "./elements.module.css";
 import cn from "classnames";
-import {useAuth} from "../hooks/useAuth";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {IRegisterFormFields} from "../types";
 
 const SignUp = () => {
-  const navigate = useNavigate()
   const [formStep, setFormStep] = useState(0);
   const {
     register,
@@ -23,18 +21,16 @@ const SignUp = () => {
     mode: 'onBlur'
   });
 
-  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email,pass, name}) => {
+  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email,pass, name, photo}) => {
     createUserWithEmailAndPassword(auth, email, pass)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         const {user} = userCredential;
-        sendEmailVerification(user)
-          .then()
-          .catch();
-        updateProfile(user, {
-          displayName: name, photoURL: "https://example.com/jane-q-user/profile.jpg"
-        }).then()
-          .catch();
-        const docRef = setDoc(doc(db, "users", user.uid), {
+        await updateProfile(user, {
+          displayName: name
+        });
+        await sendEmailVerification(user);
+        await updateCurrentUser(auth, user);
+        await setDoc(doc(db, "users", user.uid), {
           id: user.uid,
           photoURL: user.photoURL,
           name: name,
@@ -97,6 +93,7 @@ const SignUp = () => {
             {errors?.email && <span className={styles.msg_error}>{errors.email.message}</span>}
             <input
               type="password"
+              pattern="^(?=.*\d)(?=.*[a-z]).{8,}$"
               {...register('pass', {
                 required: true,
                 pattern: {

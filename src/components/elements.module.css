@@ -1,6 +1,6 @@
 .input {
-  @apply p-3 outline-none rounded-sm bg-slate-100 hover:bg-slate-200
-  focus:bg-white focus:outline-1 focus:outline-stone-900 transition-all
+  @apply p-3 outline-none rounded-sm bg-slate-100 hover:bg-slate-200 focus:bg-white focus:outline-1 focus:outline-stone-400
+  invalid:bg-red-100 invalid:hover:bg-red-200 invalid:focus:bg-white invalid:focus:outline-red-600 transition-all
 }
 
 .btn {

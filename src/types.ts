@@ -5,4 +5,5 @@ export interface IAuthFormFields {
 
 export interface IRegisterFormFields extends IAuthFormFields{
   name: string,
+  photo: string,
 }

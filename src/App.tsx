@@ -1,21 +1,23 @@
-import React, {Suspense, lazy} from 'react';
+import React, {Suspense, lazy, useEffect} from 'react';
 
 import {Routes, Route, Navigate} from "react-router-dom";
-import {useAuth} from "./hooks/useAuth";
-import {useAppSelector} from "./hooks/redux-hooks";
+import {useAppDispatch, useAppSelector} from "./hooks/redux-hooks";
 import Loader from "./components/Loader";
+import {onAuthStateChanged} from "firebase/auth";
+import {auth} from "./firebase";
+import {setIsLoading, setIsLoggedIn} from "./store/slices/userSlice";
+import SignIn from "./components/SignIn";
+import SignUp from "./components/SignUp";
+import AuthPage from "./pages/AuthPage";
 // import {db} from "./firebase";
 // import { collection, getDoc, getDocs, doc, updateDoc, query, where, limit } from "firebase/firestore";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
-const AuthPage = lazy(() => import("./pages/AuthPage"));
-const SignIn = lazy(() => import("./components/SignIn"));
-const SignUp = lazy(() => import("./components/SignUp"));
 
 function AuthenticatedApp() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage/>}/>
+      <Route index element={<HomePage/>}/>
       <Route path="/login" element={<Navigate to="/"/>} />
       <Route path="/register" element={<Navigate to="/"/>} />
     </Routes>
@@ -25,20 +27,33 @@ function AuthenticatedApp() {
 function UnauthenticatedApp() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login"/>}/>
-      <Route path="/login" element={
-        <AuthPage children={<SignIn/>} />
-      }/>
-      <Route path="/register" element={
-        <AuthPage children={<SignUp/>} />
-      }/>
+      <Route index element={<Navigate to="/login"/>}/>
+      <Route path="/" element={<AuthPage/>}>
+        <Route path="/login" element={<SignIn/>}/>
+        <Route path="/register" element={<SignUp/>}/>
+      </Route>
     </Routes>
   );
 }
 
 function App() {
-  const { isLoggedIn } = useAuth();
-  const {isLoading} = useAppSelector(state => state.user);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const subscriber = onAuthStateChanged(auth, (userInfo) => {
+      if (userInfo) {
+        dispatch(setIsLoggedIn(true));
+      } else {
+        dispatch(setIsLoggedIn(false));
+      }
+      dispatch(setIsLoading(false));
+    });
+    return () => {
+      subscriber();
+    }
+  }, []);
+
+  const {isLoading, isLoggedIn} = useAppSelector(state => state.user);
 
   return (
     isLoading ? <Loader/> :

@@ -13,7 +13,7 @@ const HomePage = () => {
 
   return (
     <div>
-      <h1>Welcome</h1>
+      <h1>Welcome, {auth?.currentUser?.displayName}</h1>
       <button onClick={handleLogOut}>
         Log Out
       </button>
