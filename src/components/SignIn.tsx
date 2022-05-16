@@ -1,16 +1,20 @@
 import React from 'react';
 
-import {signInWithEmailAndPassword } from "firebase/auth";
-import {auth} from "../firebase";
+import {signInWithEmailAndPassword, updateCurrentUser} from "firebase/auth";
+import {auth} from "../firebase.config";
 
-import {Link, useNavigate} from "react-router-dom";
-import styles from "./elements.module.css";
+import {Link, useLocation, useNavigate} from "react-router-dom";
+import styles from "components/elements.module.css";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {IAuthFormFields} from "../types";
 import cn from "classnames";
 
+type locationState = { from: string };
+
 const SignIn = () => {
   const navigate = useNavigate()
+  const location = useLocation();
+  const fromPage = (location.state as locationState)?.from ?? '/';
   const {
     register,
     formState: { errors },
@@ -20,10 +24,14 @@ const SignIn = () => {
     mode: 'onBlur'
   });
 
-  const handleLogin: SubmitHandler<IAuthFormFields> = ({email, pass}) => {
+  // @ts-ignore
+  const handleLogin: SubmitHandler<IAuthFormFields> = ({email, pass}, e?: Event) => {
+    e?.preventDefault();
     signInWithEmailAndPassword(auth, email, pass)
-      .then((userCredential) => {
-        navigate('/');
+      .then(async (userCredential) => {
+        const {user} = userCredential;
+        await updateCurrentUser(auth, user);
+        navigate(fromPage); // it must after update auth.currentUser
       })
       .catch(err => {
         switch (err.code) {

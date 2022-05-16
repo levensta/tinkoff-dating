@@ -6,7 +6,7 @@ const Layout = () => {
   return (
     <>
       <Board />
-      <main className={"flex justify-center items-center bg-gray-200"}>
+      <main className={"flex justify-center items-center h-screen bg-gray-100"}>
         <Outlet/>
       </main>
     </>
