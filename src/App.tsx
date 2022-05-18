@@ -2,7 +2,7 @@ import React, {Suspense, lazy, useEffect} from 'react';
 
 import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "./hooks/redux-hooks";
-import Loader from "./components/Loader";
+import Loader from "./components/Loaders/Loader";
 import {onAuthStateChanged} from "firebase/auth";
 import {auth} from "./firebase.config";
 import {setIsLoading, setIsLoggedIn} from "./store/slices/userSlice";

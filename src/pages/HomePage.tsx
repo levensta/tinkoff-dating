@@ -1,12 +1,20 @@
 import React, {useEffect} from 'react';
 
 import {signOut} from "firebase/auth";
-import {auth, db} from "firebase.config";
+import {auth} from "firebase.config";
 import Card from "components/Card";
-import {fetchRecommendedProfiles} from "../store/slices/userSlice";
-import {useAppDispatch, useAppSelector} from "../hooks/redux-hooks";
-import Loader from "../components/Loader";
-import { doc, getDoc } from 'firebase/firestore';
+import {fetchRecommendedProfiles} from "store/slices/userSlice";
+import {useAppDispatch, useAppSelector} from "hooks/redux-hooks";
+import Loader from "components/Loaders/Loader";
+import default_avatar from "assets/default_avatar.jpg"
+import Stack from "components/Stack";
+import SearchLoader from "components/Loaders/SearchLoader";
+
+const tf = () => {
+  const rotation = Math.random() * (2 - -2) + -2;
+  console.log(rotation);
+  return `rotate(${rotation}deg)`;
+};
 
 const HomePage = () => {
   const dispatch = useAppDispatch();
@@ -18,8 +26,8 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    if (profiles.length < 2) {
-      dispatch(fetchRecommendedProfiles(10));
+    if (!profiles.length) {
+      dispatch(fetchRecommendedProfiles(2));
     }
   }, [profiles.length]);
 
@@ -28,24 +36,29 @@ const HomePage = () => {
     return <p className={"max-w-sm text-red-600"}>Произошла ошибка. Попробуйте повторить позже</p>;
   }
 
-  profiles.forEach(item => console.log(item));
   return (
     <>
       {isLoading ? <Loader/> :
-        <ul className={"relative overflow-hidden w-full h-full flex justify-center items-center"}>
-        {profiles.map((item, idx) => (
-          <Card
-          key={item.id}
-          name={item.name}
-          age={item.age}
-          city={item.city}
-          description={item.description}
-          photosURLs={item.photosURLs}
-          tagsInterests={item.tagsInterests}
-          index={idx + 1}
-          />
+        !profiles.length ? <SearchLoader avatarURL={auth.currentUser?.photoURL ?? default_avatar}/> :
+        <Stack onVote={(item: { props: any; }, vote: any) => console.log(vote)}>
+          {profiles.map((item, idx) => (
+            <div
+              className={"w-[400px] aspect-[2/3] flex flex-col items-center justify-center shadow bg-gray-50 rounded-md"}
+              style={{transform: `${tf()}`}}
+              key={item.id}
+            >
+              <Card
+                index={idx}
+                name={item.name}
+                age={item.age}
+                city={item.city}
+                description={item.description}
+                photosURLs={item.photosURLs}
+                tagsInterests={item.tagsInterests}
+              />
+            </div>
           ))}
-        </ul>
+        </Stack>
       }
       <div className={"fixed top-0 right-0"}>
         <h1>Welcome, {auth.currentUser!.displayName}</h1>
