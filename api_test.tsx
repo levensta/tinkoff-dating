@@ -33,9 +33,9 @@
 
 // upd
 // const ref = doc(db, "users", "guQWD918bhUiDmHdVbdnNUyVZuD3");
-// // updateDoc(ref, {
-// //   description: 'lol'
-// // }).then(r => console.log(r));
+// updateDoc(ref, {
+//   description: 'lol'
+// }).then(r => console.log(r));
 
 // useEffect(() => {
 //   if (image) {

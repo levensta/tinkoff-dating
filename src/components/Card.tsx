@@ -4,16 +4,9 @@ import {motion, useMotionValue, useTransform, useMotionTemplate, useAnimation} f
 import Slider from "components/Slider";
 import {Profile} from "types";
 
-interface ICard extends Omit<Profile, 'id' | '_likedProfiles' | '_dislikedProfiles'> {
+interface ICard extends Omit<Profile, 'id' | '_likedProfiles' | '_watchedProfiles'> {
   index: number
 }
-
-// const Card: React.FC<ICard> = ({name, age, city, description, photosURLs, tagsInterests, index}) => {
-//
-//   return (
-//     <motion.li className="flex flex-col aspect-[2/3] max-w-md bg-white rounded-lg border border-gray-200 shadow-md absolute">
-//       <Slider imgLinks={photosURLs} />
-//       <div className={cn("p-5 absolute bottom-0 bg-gradient-to-t from-stone-900", `z-[${index}]`)}>
 
 const Card: React.FC<ICard> = ({name, age, city, description, photosURLs, tagsInterests, index}) => {
   const mv = useMotionValue(0);

@@ -1,11 +1,12 @@
 import React, {useEffect} from 'react';
 
 import {signOut} from "firebase/auth";
-import {auth} from "firebase.config";
+import {auth, db} from "firebase.config";
 import Card from "components/Card";
 import {fetchRecommendedProfiles} from "../store/slices/userSlice";
 import {useAppDispatch, useAppSelector} from "../hooks/redux-hooks";
 import Loader from "../components/Loader";
+import { doc, getDoc } from 'firebase/firestore';
 
 const HomePage = () => {
   const dispatch = useAppDispatch();
@@ -18,14 +19,16 @@ const HomePage = () => {
 
   useEffect(() => {
     if (profiles.length < 2) {
-      dispatch(fetchRecommendedProfiles(2));
+      dispatch(fetchRecommendedProfiles(10));
     }
   }, [profiles.length]);
 
   if (error) {
-    return <p>{error}</p>;
+    console.log(error);
+    return <p className={"max-w-sm text-red-600"}>Произошла ошибка. Попробуйте повторить позже</p>;
   }
 
+  profiles.forEach(item => console.log(item));
   return (
     <>
       {isLoading ? <Loader/> :
@@ -45,7 +48,7 @@ const HomePage = () => {
         </ul>
       }
       <div className={"fixed top-0 right-0"}>
-        <h1>Welcome, {auth?.currentUser?.displayName}</h1>
+        <h1>Welcome, {auth.currentUser!.displayName}</h1>
         <button onClick={handleLogOut}>
           Log Out
         </button>

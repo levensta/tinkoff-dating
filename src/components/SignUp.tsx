@@ -21,9 +21,7 @@ const SignUp = () => {
     mode: 'onBlur'
   });
 
-  // @ts-ignore
-  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email, pass, name, photo}, e?: Event) => {
-    e?.preventDefault();
+  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email, pass, name, photo}) => {
     createUserWithEmailAndPassword(auth, email, pass)
       .then(async (userCredential) => {
         const {user} = userCredential;
@@ -42,7 +40,7 @@ const SignUp = () => {
           photosURLs: [],
           tagsInterests: [],
           _likedProfiles: [],
-          _dislikedProfiles: [],
+          _watchedProfiles: [user.uid],
           isHiddenProfile: false,
           isHiddenAge: false,
         });

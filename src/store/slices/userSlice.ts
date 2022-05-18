@@ -1,5 +1,5 @@
 import {createSlice, createAsyncThunk, PayloadAction} from "@reduxjs/toolkit";
-import {collection, getDocs, limit, query, where} from "firebase/firestore";
+import {collection, doc, getDoc, getDocs, limit, query, where} from "firebase/firestore";
 import {auth, db} from "../../firebase.config";
 import {Profile} from "../../types";
 
@@ -7,17 +7,22 @@ export const fetchRecommendedProfiles = createAsyncThunk<Array<Profile>, number,
   'user/fetchRecommendedProfiles',
     async function (maxDocs, {rejectWithValue}) {
       try {
+        const userRef = doc(db, 'users', auth.currentUser!.uid);
+        const userDoc = await getDoc(userRef);
         const docData = await getDocs(query(
           collection(db, 'users'),
           limit(maxDocs),
-          where('id', '!=', auth.currentUser!.uid),
-          // where('isHiddenProfile', '==', false),
-          // where('_dislikedProfiles', 'not-in', [auth.currentUser!.uid])
+          // where('id', '!=', auth.currentUser!.uid),
+          where('isHiddenProfile', '==', false),
+          where('id', 'not-in', [...userDoc.data()!._watchedProfiles])
           )
         );
         const arrProfiles: Array<Profile> = [];
         docData.forEach((doc) => {
           arrProfiles.push(doc.data() as Profile);
+          // console.log(doc.data())
+          // if (userDoc.data()!._watchedProfiles[0] === doc.data().id)
+          //   console.log(doc.data())
         });
         return arrProfiles;
       } catch (error) {

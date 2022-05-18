@@ -21,7 +21,7 @@ export interface Profile {
   photosURLs :Array<string>
   tagsInterests: Array<string>,
   _likedProfiles: Array<string>,
-  _dislikedProfiles: Array<string>,
+  _watchedProfiles: Array<string>,
   isHiddenProfile?: boolean,
   isHiddenAge?: boolean,
 }
