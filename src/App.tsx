@@ -11,6 +11,7 @@ import AuthPage from "./pages/AuthPage";
 import Layout from "./Layout";
 import NotFound from "./pages/NotFound";
 import ScreenLoader from "components/Loaders/ScreenLoader";
+import ChatPage from "./pages/ChatPage";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 
@@ -20,7 +21,7 @@ function AuthenticatedApp() {
       <Route path="/" element={<Layout/>}>
         <Route index element={<HomePage/>} />
         <Route path="/matches" element={<HomePage/>} />
-        <Route path="/matches/:chatId" element={<></>} />
+        <Route path="/matches/:chatId" element={<ChatPage/>} />
         <Route path="/settings" element={<></>} />
         <Route path="/profile" element={<></>} />
         <Route path="/profile/edit" element={<></>} />

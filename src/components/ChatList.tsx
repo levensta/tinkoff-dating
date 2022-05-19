@@ -1,22 +1,29 @@
-import React from 'react';
-import {useAppSelector} from "../hooks/redux-hooks";
+import React, {useEffect} from 'react';
+import {useAppDispatch, useAppSelector} from "../hooks/redux-hooks";
 import Loader from "./Loaders/Loader";
 import ChatItem from "./ChatItem";
 import {auth} from "../firebase.config";
 import default_avatar from "assets/default_avatar.jpg"
 import {signOut} from "firebase/auth";
 import {NavLink} from "react-router-dom";
+import {fetchChats} from "../store/slices/userSlice";
+import ErrorMessage from "./ErrorMessage";
 
 const ChatList: React.FC = () => {
+  const dispatch = useAppDispatch();
   const {chats, isLoading, error} = useAppSelector(state => state.user.matches);
   const setActive = ({isActive}: {isActive: boolean}):string => (
-    isActive ? "shadow-md border-r-8 border-amber-400 group"
+    isActive ? "shadow-md border-r-8 border-amber-400"
       : 'hover:shadow-md hover:border-r-8 hover:border-amber-400 transition-all'
   );
 
+  useEffect(() => {
+    dispatch(fetchChats());
+  }, []);
+
   return (
     <div className={"flex flex-col w-full h-full"}>
-      <div className={"flex items-center justify-between p-5 bg-amber-400"}>
+      <div className={"flex items-center justify-between p-6 bg-amber-400"}>
         <div className={"flex items-center space-x-3 p-1 rounded-full hover:bg-amber-500 transition-colors"}>
           <img
             className={"w-8 h-8 rounded-full"}
@@ -35,6 +42,7 @@ const ChatList: React.FC = () => {
         </button>
       </div>
       {isLoading ? <Loader sizeStyle={"w-8 h-8"}/>
+        : error ? <ErrorMessage error={error} />
         : chats.map(item => {
           return (
             <NavLink

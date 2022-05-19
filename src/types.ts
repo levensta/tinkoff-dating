@@ -3,7 +3,7 @@ export interface IAuthFormFields {
   pass: string
 }
 
-export interface IRegisterFormFields extends IAuthFormFields{
+export interface IRegisterFormFields extends IAuthFormFields {
   name: string,
   photo: string,
 }
@@ -28,4 +28,10 @@ export interface Chat {
   chatId: string,
   name: string,
   lastMessage: string
+}
+
+export interface Message {
+  id: string,
+  senderId: string,
+  text: string,
 }

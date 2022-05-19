@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {FormEvent} from 'react';
 
 import {signInWithEmailAndPassword, updateCurrentUser} from "firebase/auth";
 import {auth} from "../firebase.config";
@@ -24,14 +24,12 @@ const SignIn = () => {
     mode: 'onBlur'
   });
 
-  // @ts-ignore
-  const handleLogin: SubmitHandler<IAuthFormFields> = ({email, pass}, e?: Event) => {
-    e?.preventDefault();
+  const handleLogin: SubmitHandler<IAuthFormFields> = ({email, pass}) => {
     signInWithEmailAndPassword(auth, email, pass)
       .then(async (userCredential) => {
         const {user} = userCredential;
-        await updateCurrentUser(auth, user);
-        navigate(fromPage); // it must after update auth.currentUser
+        updateCurrentUser(auth, user)
+          .then(() => navigate(fromPage));
       })
       .catch(err => {
         switch (err.code) {
@@ -49,8 +47,13 @@ const SignIn = () => {
       });
   }
 
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmit(handleLogin)();
+  }
+
   return (
-    <form onSubmit={handleSubmit(handleLogin)}>
+    <form onSubmit={onSubmit}>
       <fieldset className={"flex flex-col items-center"}>
         <h1 className={"text-2xl font-medium"}>Авторизуйтесь</h1>
         <div className={"flex flex-col w-full my-3"}>

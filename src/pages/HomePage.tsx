@@ -1,12 +1,14 @@
 import React, {useEffect} from 'react';
 
-import {auth} from "firebase.config";
+import {auth, db} from "firebase.config";
 import Card from "components/Card";
-import {fetchChats, fetchRecommendedProfiles} from "store/slices/userSlice";
+import {fetchRecommendedProfiles} from "store/slices/userSlice";
 import {useAppDispatch, useAppSelector} from "hooks/redux-hooks";
 import default_avatar from "assets/default_avatar.jpg"
 import Stack from "components/Stack";
 import SearchLoader from "components/Loaders/SearchLoader";
+import ErrorMessage from "../components/ErrorMessage";
+import {doc, getDoc} from "firebase/firestore";
 
 const tf = () => {
   const rotation = Math.random() * (2 - -2) + -2;
@@ -18,10 +20,6 @@ const HomePage = () => {
   const {isLoading, error, profiles} = useAppSelector(state => state.user.recs);
 
   useEffect(() => {
-    dispatch(fetchChats());
-  }, []);
-
-  useEffect(() => {
     if (!profiles.length) {
       dispatch(fetchRecommendedProfiles(5));
     }
@@ -29,7 +27,7 @@ const HomePage = () => {
 
   if (error) {
     console.log(error);
-    return <p className={"max-w-sm text-red-600"}>Произошла ошибка. Попробуйте повторить позже</p>;
+    return <ErrorMessage error={error}/>;
   }
 
   return (

@@ -1,12 +1,14 @@
 import {createSlice, createAsyncThunk, PayloadAction} from "@reduxjs/toolkit";
-import {collection, doc, getDoc, getDocs, addDoc, updateDoc, arrayUnion, limit, query, where, serverTimestamp} from "firebase/firestore";
+import {collection, doc, getDoc, getDocs, addDoc, updateDoc, arrayUnion, orderBy, query, where, serverTimestamp} from "firebase/firestore";
 import {auth, db} from "firebase.config";
-import {Chat, Profile} from "types";
+import {Chat, Message, Profile} from "types";
+import {reload} from "firebase/auth";
 
 export const fetchRecommendedProfiles = createAsyncThunk<Array<Profile>, number, {rejectValue: string}>(
   'user/fetchRecommendedProfiles',
     async function (maxDocs, {rejectWithValue}) {
     try {
+      await reload(auth.currentUser!);
       const userRef = doc(db, 'users', auth.currentUser!.uid);
       const userDoc = await getDoc(userRef);
 
@@ -38,6 +40,7 @@ export const fetchChats = createAsyncThunk<Array<Chat>, void, {rejectValue: stri
   'user/fetchChats',
   async function (_, {rejectWithValue}) {
     try {
+      await reload(auth.currentUser!);
       const userRef = doc(db, 'users', auth.currentUser!.uid);
       const docData = await getDocs(query(
         collection(db, 'users_chats'),
@@ -55,6 +58,35 @@ export const fetchChats = createAsyncThunk<Array<Chat>, void, {rejectValue: stri
         });
       });
       return arrChats;
+    } catch (error) {
+      const typedError = error as Error;
+      return rejectWithValue(typedError.message);
+    }
+  }
+);
+
+export const fetchMessages = createAsyncThunk<Array<Message>, string, {rejectValue: string}>(
+  'user/fetchMessages',
+  async function (chatId, {rejectWithValue}) {
+    try {
+      await reload(auth.currentUser!);
+      const refChat = doc(db, 'chats', chatId);
+      const docData = await getDocs(query(
+        collection(db, 'messages'),
+        where('chat', '==', refChat),
+        orderBy('createdAt'),
+      ));
+
+      const arrMessages: Array<Message> = [];
+      docData.forEach((doc) => {
+        const chatData = doc.data();
+        arrMessages.push({
+          id: doc.id,
+          senderId: chatData.senderId.id,
+          text: chatData.text,
+        });
+      });
+      return arrMessages;
     } catch (error) {
       const typedError = error as Error;
       return rejectWithValue(typedError.message);
@@ -94,7 +126,7 @@ export const createChat = createAsyncThunk<Chat, string, {rejectValue: string}>(
   async function (likedUid, {rejectWithValue}) {
     try {
       const refChatDoc = await addDoc(collection(db, 'chats'), {
-        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp(),
       });
       const refLikedUser = await getDoc(doc(db, 'users', likedUid));
       const likedUser = refLikedUser.data();
@@ -129,6 +161,57 @@ export const createChat = createAsyncThunk<Chat, string, {rejectValue: string}>(
   }
 );
 
+export const addMessage = createAsyncThunk<Message, {textValue: string, senderId: string, chatId: string}, {rejectValue: string}>(
+  'user/addMessage',
+  async function ({textValue, senderId, chatId}, {rejectWithValue, dispatch}) {
+    try {
+      const refMsg = await addDoc(collection(db, 'messages'), {
+        chat: doc(db, 'chats', chatId),
+        senderId: doc(db, '/users/', senderId),
+        text: textValue,
+        createdAt: serverTimestamp(),
+      });
+      dispatch(updateLastMessage({
+        chatId, lastMessage: textValue
+      }));
+      return {
+        id: refMsg.id,
+        senderId: senderId,
+        text: textValue,
+      }
+    } catch (error) {
+      const typedError = error as Error;
+      return rejectWithValue(typedError.message);
+    }
+  }
+);
+
+export const updateLastMessage = createAsyncThunk<Omit<Chat, 'name'>, {chatId: string, lastMessage: string}, {rejectValue: string}>(
+  'user/updateLastMessage',
+  async function ({chatId, lastMessage}, {rejectWithValue}) {
+    try {
+      const refChat = doc(db, 'chats', chatId);
+      const docData = await getDocs(query(
+          collection(db, 'users_chats'),
+          where('chat', '==', refChat),
+        )
+      );
+      docData.forEach(doc => {
+        updateDoc(doc.ref, {
+          lastMessage,
+        });
+      });
+      return {
+        chatId,
+        lastMessage,
+      }
+    } catch (error) {
+      const typedError = error as Error;
+      return rejectWithValue(typedError.message);
+    }
+  }
+);
+
 type userState = {
   isLoading: boolean,
   isLoggedIn: boolean,
@@ -140,6 +223,11 @@ type userState = {
   matches: {
     chats: Array<Chat>,
     profiles: Array<Profile>,
+    isLoading: boolean,
+    error: string | null,
+  },
+  messages: {
+    info: Array<Message>,
     isLoading: boolean,
     error: string | null,
   },
@@ -156,6 +244,11 @@ const initialState: userState = {
   matches: {
     chats: [],
     profiles: [],
+    isLoading: true,
+    error: null,
+  },
+  messages: {
+    info: [],
     isLoading: true,
     error: null,
   },
@@ -211,6 +304,29 @@ const userSlice = createSlice({
         state.matches.isLoading = false;
         state.matches.error = action.payload!;
       })
+      .addCase(fetchMessages.pending, (state, action) => {
+        state.messages.isLoading = true;
+        state.matches.error = null;
+      })
+      .addCase(fetchMessages.fulfilled, (state, action) => {
+        state.messages.isLoading = false;
+        state.messages.info = action.payload;
+      })
+      .addCase(fetchMessages.rejected, (state, action) => {
+        state.messages.isLoading = false;
+        state.matches.error = action.payload!;
+      })
+      .addCase(addMessage.fulfilled, (state, action) => {
+        state.messages.info.push(action.payload);
+      })
+      .addCase(updateLastMessage.fulfilled, (state, action) => {
+        state.matches.chats = state.matches.chats.map(item => {
+          if (item.chatId === action.payload.chatId) {
+            return {...item, lastMessage: action.payload.lastMessage };
+          }
+          return item;
+        });
+      });
   }
 });
 

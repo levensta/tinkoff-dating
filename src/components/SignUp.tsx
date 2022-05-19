@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {FormEvent} from 'react';
 
-import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile, updateCurrentUser} from "firebase/auth";
+import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile, updateCurrentUser, reload} from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import {auth, db} from "firebase.config";
 
@@ -22,8 +22,8 @@ const SignUp = () => {
   });
 
   // @ts-ignore
-  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email, pass, name, photo}, e: Event) => {
-    e.preventDefault();
+  const handleRegister: SubmitHandler<IRegisterFormFields> = async ({email, pass, name}, e: Event) => {
+
     createUserWithEmailAndPassword(auth, email, pass)
       .then(async (userCredential) => {
         const {user} = userCredential;
@@ -31,7 +31,9 @@ const SignUp = () => {
         await updateProfile(user, {
           displayName: name
         });
-        await updateCurrentUser(auth, user);
+        updateCurrentUser(auth, user)
+          .then(() => reload(user)
+            .then(() => navigate('/')));
         await setDoc(doc(db, "users", user.uid), {
           id: user.uid,
           avatarURL: user.photoURL,
@@ -57,11 +59,15 @@ const SignUp = () => {
             return setError('email', { message: err.message });
         }
       });
-    // navigate('/'); // it must after update auth.currentUser
+  }
+
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSubmit(handleRegister)();
   }
 
   return (
-    <form onSubmit={handleSubmit(handleRegister)}>
+    <form onSubmit={onSubmit}>
       <fieldset className={"flex flex-col items-center"}>
         <h1 className={"text-2xl font-medium"}>Регистрация</h1>
         <div className={"flex flex-col w-full my-3"}>
