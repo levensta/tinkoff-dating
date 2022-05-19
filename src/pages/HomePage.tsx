@@ -1,33 +1,29 @@
 import React, {useEffect} from 'react';
 
-import {signOut} from "firebase/auth";
 import {auth} from "firebase.config";
 import Card from "components/Card";
-import {fetchRecommendedProfiles} from "store/slices/userSlice";
+import {fetchChats, fetchRecommendedProfiles} from "store/slices/userSlice";
 import {useAppDispatch, useAppSelector} from "hooks/redux-hooks";
-import Loader from "components/Loaders/Loader";
 import default_avatar from "assets/default_avatar.jpg"
 import Stack from "components/Stack";
 import SearchLoader from "components/Loaders/SearchLoader";
 
 const tf = () => {
   const rotation = Math.random() * (2 - -2) + -2;
-  console.log(rotation);
   return `rotate(${rotation}deg)`;
 };
 
 const HomePage = () => {
   const dispatch = useAppDispatch();
-  const {isLoading, error, profiles} = useAppSelector(state => state.user.recs)
-  const handleLogOut = () => {
-    signOut(auth)
-      .then(r => console.log(r))
-      .catch(err => console.log(err));
-  };
+  const {isLoading, error, profiles} = useAppSelector(state => state.user.recs);
+
+  useEffect(() => {
+    dispatch(fetchChats());
+  }, []);
 
   useEffect(() => {
     if (!profiles.length) {
-      dispatch(fetchRecommendedProfiles(2));
+      dispatch(fetchRecommendedProfiles(5));
     }
   }, [profiles.length]);
 
@@ -38,12 +34,11 @@ const HomePage = () => {
 
   return (
     <>
-      {isLoading ? <Loader/> :
-        !profiles.length ? <SearchLoader avatarURL={auth.currentUser?.photoURL ?? default_avatar}/> :
-        <Stack onVote={(item: { props: any; }, vote: any) => console.log(vote)}>
+      {isLoading || !profiles.length ? <SearchLoader avatarURL={auth.currentUser?.photoURL ?? default_avatar}/> :
+        <Stack>
           {profiles.map((item, idx) => (
             <div
-              className={"w-[400px] aspect-[2/3] flex flex-col items-center justify-center shadow bg-gray-50 rounded-md"}
+              className={"aspect-[2/3] flex max-w-md flex-col items-center justify-center shadow bg-gray-50 rounded-md relative"}
               style={{transform: `${tf()}`}}
               key={item.id}
             >
@@ -60,12 +55,6 @@ const HomePage = () => {
           ))}
         </Stack>
       }
-      <div className={"fixed top-0 right-0"}>
-        <h1>Welcome, {auth.currentUser!.displayName}</h1>
-        <button onClick={handleLogOut}>
-          Log Out
-        </button>
-      </div>
     </>
   );
 };

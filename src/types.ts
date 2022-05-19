@@ -8,9 +8,6 @@ export interface IRegisterFormFields extends IAuthFormFields{
   photo: string,
 }
 
-// ({email, pass, name, photo}: { email: any; pass: any; name: any; photo: any }, e?: Event) => void
-
-
 export interface Profile {
   id: string,
   avatarURL?: string,
@@ -24,4 +21,11 @@ export interface Profile {
   _watchedProfiles: Array<string>,
   isHiddenProfile?: boolean,
   isHiddenAge?: boolean,
+}
+
+export interface Chat {
+  avatarURL?: string,
+  chatId: string,
+  name: string,
+  lastMessage: string
 }

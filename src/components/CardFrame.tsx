@@ -1,18 +1,16 @@
 import React, {useEffect, useRef, useState} from "react";
-import {motion, useAnimation, useMotionValue} from "framer-motion";
+import {motion, useAnimation, useMotionValue, useTransform} from "framer-motion";
 
 // @ts-ignore
 const CardFrame = ({ children, style, onVote, id, ...props }) => {
   // motion stuff
   const cardElem = useRef(null);
-
   const x = useMotionValue(0);
   const controls = useAnimation();
+  const rotateX = useTransform(x, [-700, 700], [-20, 20]);
 
   const [constrained, setConstrained] = useState(true);
-
   const [direction, setDirection] = useState();
-
   const [velocity, setVelocity] = useState();
 
   // @ts-ignore
@@ -28,7 +26,9 @@ const CardFrame = ({ children, style, onVote, id, ...props }) => {
 
   // determine direction of swipe based on velocity
   const getDirection = () => {
-    return velocity! >= 1 ? "right" : velocity! <= -1 ? "left" : undefined;
+    return velocity! >= 1 ? "right"
+      : velocity! <= -1 ? "left"
+        : undefined;
   };
 
   const getTrajectory = () => {
@@ -77,7 +77,7 @@ const CardFrame = ({ children, style, onVote, id, ...props }) => {
       dragConstraints={constrained && { left: 0, right: 0, top: 0, bottom: 0 }}
       dragElastic={1}
       ref={cardElem}
-      style={{ x, }}
+      style={{ x, rotate: rotateX}}
       onDrag={getTrajectory}
       onDragEnd={() => flyAway(500)}
       {...props}

@@ -1,12 +1,11 @@
-import React, { useState, Children } from "react";
+import React, {useState, Children, ReactElement} from "react";
 import CardFrame from "components/CardFrame";
-import {useAppDispatch, useAppSelector} from "hooks/redux-hooks";
+import {useAppDispatch} from "hooks/redux-hooks";
 import {swipeProfile} from "store/slices/userSlice";
 
-const Stack: React.FC<any> = ({ onVote, children }) => {
+const Stack: React.FC<{children: ReactElement[]}> = ({children}) => {
   const [stack, setStack] = useState(Children.toArray(children));
   const dispatch = useAppDispatch();
-  const profiles = useAppSelector(state => state.user.recs.profiles);
 
   // return new array with last item removed
   const pop = (array: any[]) => {
@@ -15,18 +14,14 @@ const Stack: React.FC<any> = ({ onVote, children }) => {
     });
   };
 
-  // @ts-ignore
-  const handleVote = (item, vote) => {
+  const handleVote = (item: ReactElement, vote: boolean) => {
     // update the stack
     const newStack = pop(stack);
     dispatch(swipeProfile({
-      id: item.key.slice(2),
+      uid: (item.key as string).slice(2),
       isLike: vote
     }));
     setStack(newStack);
-
-    // run function from onVote prop, passing the current item and value of vote
-    onVote(item, vote);
   };
 
   return (

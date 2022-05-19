@@ -2,7 +2,6 @@ import React, {Suspense, lazy, useEffect} from 'react';
 
 import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "./hooks/redux-hooks";
-import Loader from "./components/Loaders/Loader";
 import {onAuthStateChanged} from "firebase/auth";
 import {auth} from "./firebase.config";
 import {setIsLoading, setIsLoggedIn} from "./store/slices/userSlice";
@@ -11,8 +10,7 @@ import SignUp from "./components/SignUp";
 import AuthPage from "./pages/AuthPage";
 import Layout from "./Layout";
 import NotFound from "./pages/NotFound";
-// import {db} from "./firebase";
-// import { collection, getDoc, getDocs, doc, updateDoc, query, where, limit } from "firebase/firestore";
+import ScreenLoader from "components/Loaders/ScreenLoader";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 
@@ -21,7 +19,8 @@ function AuthenticatedApp() {
     <Routes>
       <Route path="/" element={<Layout/>}>
         <Route index element={<HomePage/>} />
-        <Route path="/matches" element={<></>} />
+        <Route path="/matches" element={<HomePage/>} />
+        <Route path="/matches/:chatId" element={<></>} />
         <Route path="/settings" element={<></>} />
         <Route path="/profile" element={<></>} />
         <Route path="/profile/edit" element={<></>} />
@@ -41,6 +40,7 @@ function UnauthenticatedApp() {
       <Route path="/" element={<Layout/>}>
         <Route index element={<Navigate to="/login"/>} />
         <Route path="/matches" element={<Navigate to="/login" state={{from: location.pathname}}/>} />
+        <Route path="/matches/:chatId" element={<Navigate to="/login" state={{from: location.pathname}}/>} />
         <Route path="/settings" element={<Navigate to="/login" state={{from: location.pathname}}/>} />
         <Route path="/profile" element={<Navigate to="/login" state={{from: location.pathname}}/>} />
         <Route path="/profile/edit" element={<Navigate to="/login" state={{from: location.pathname}}/>} />
@@ -74,8 +74,8 @@ function App() {
   const {isLoading, isLoggedIn} = useAppSelector(state => state.user);
 
   return (
-    isLoading ? <Loader/> :
-      <Suspense fallback={<Loader/>}>
+    isLoading ? <ScreenLoader/> :
+      <Suspense fallback={<ScreenLoader/>}>
         {isLoggedIn ? <AuthenticatedApp /> : <UnauthenticatedApp />}
       </Suspense>
   );

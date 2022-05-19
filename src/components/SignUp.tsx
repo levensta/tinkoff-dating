@@ -21,7 +21,9 @@ const SignUp = () => {
     mode: 'onBlur'
   });
 
-  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email, pass, name, photo}) => {
+  // @ts-ignore
+  const handleRegister: SubmitHandler<IRegisterFormFields> = ({email, pass, name, photo}, e: Event) => {
+    e.preventDefault();
     createUserWithEmailAndPassword(auth, email, pass)
       .then(async (userCredential) => {
         const {user} = userCredential;

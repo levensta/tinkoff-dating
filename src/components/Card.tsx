@@ -26,7 +26,7 @@ const Card: React.FC<ICard> = ({name, age, city, description, photosURLs, tagsIn
   return (
     <>
       <Slider imgLinks={photosURLs} index={index} />
-      <div className={"p-5 bottom-0 bg-gradient-to-t from-stone-900"}>
+      <div className={"p-5 bottom-0 bg-gradient-to-t from-stone-900 absolute"} style={{zIndex: index}}>
         <h5 className="mb-2 text-2xl font-bold tracking-tight text-white">
           {name} {age}
         </h5>
