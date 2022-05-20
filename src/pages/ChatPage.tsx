@@ -1,13 +1,14 @@
 import React, {FormEvent, useEffect, useRef} from 'react';
 import {useAppDispatch, useAppSelector} from "hooks/redux-hooks";
 import {NavLink, useParams} from "react-router-dom";
-import {addMessage, fetchMessages} from "store/slices/userSlice";
-import {auth} from "../firebase.config";
+import {addMessage, fetchMessages, fetchNewMessage, updateLastMessage} from "store/slices/userSlice";
+import {auth, db} from "../firebase.config";
 import ErrorMessage from "../components/ErrorMessage";
 import Loader from "../components/Loaders/Loader";
 import Message from "../components/Message";
 import style from "../components/elements.module.css"
 import cn from "classnames";
+import {collection, doc, DocumentData, getDocs, onSnapshot, query, updateDoc, where} from "firebase/firestore";
 
 const ChatPage = () => {
   const {chatId} = useParams();
@@ -15,9 +16,30 @@ const ChatPage = () => {
   const msgContainer = useRef<HTMLInputElement>(null);
   const inputMsg = useRef<HTMLInputElement>(null);
   const {info, isLoading, error} = useAppSelector(state => state.user.messages);
+  const currentProfile = useAppSelector(state => state.user.messages.currentProfile);
 
   useEffect(() => {
     dispatch(fetchMessages(chatId!));
+    // dispatch(fetchChatProfile(chatId!))
+
+    if (error) {
+      console.log(error);
+    }
+
+    const q = query(
+      collection(db, 'users_chats'),
+      where('user', '!=', doc(db, 'users', auth.currentUser!.uid)),
+      where('chat', '==', doc(db, 'chats', chatId!)));
+
+    const unsub = onSnapshot(q, (qSnapshot) => {
+      let msgData: DocumentData;
+      qSnapshot.forEach((docSnap) => {
+        msgData = docSnap.data();
+      });
+      dispatch(fetchNewMessage(msgData!.lastMsgId))
+    });
+
+    return unsub;
   }, [chatId]);
 
   useEffect(() => {

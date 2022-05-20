@@ -1,8 +1,22 @@
 import {createSlice, createAsyncThunk, PayloadAction} from "@reduxjs/toolkit";
-import {collection, doc, getDoc, getDocs, addDoc, updateDoc, arrayUnion, orderBy, query, where, serverTimestamp} from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  arrayUnion,
+  orderBy,
+  query,
+  where,
+  serverTimestamp,
+  setDoc
+} from "firebase/firestore";
 import {auth, db} from "firebase.config";
 import {Chat, Message, Profile} from "types";
-import {reload} from "firebase/auth";
+import {reload, signOut} from "firebase/auth";
+import { v4 as uuidv4 } from 'uuid';
 
 export const fetchRecommendedProfiles = createAsyncThunk<Array<Profile>, number, {rejectValue: string}>(
   'user/fetchRecommendedProfiles',
@@ -94,6 +108,35 @@ export const fetchMessages = createAsyncThunk<Array<Message>, string, {rejectVal
   }
 );
 
+// export const fetchChatProfile = createAsyncThunk<Profile, string, {rejectValue: string}>(
+//   'user/fetchUserProfile',
+//   async function (chatId, {rejectWithValue}) {
+//     try {
+//       const refChat = doc(db, 'chats', chatId);
+//       // const refCurrentUser = doc(db, 'users', auth.currentUser!.uid);
+//
+//       const docData = await getDocs(query(
+//         collection(db, 'users_chats'),
+//         where('chat', '==', refChat),
+//         // where('user', '!=', refCurrentUser),
+//       ));
+//
+//       let userId = {};
+//       docData.forEach((doc) => {
+//         const data = doc.data();
+//         if (auth.currentUser!.uid !== data.user.id) {
+//           userId = data.user.id;
+//           getDoc(data.user);
+//         }
+//       });
+//       return userId as Profile;
+//     } catch (error) {
+//       const typedError = error as Error;
+//       return rejectWithValue(typedError.message);
+//     }
+//   }
+// );
+
 export const swipeProfile = createAsyncThunk<string, {uid: string, isLike: boolean}, {rejectValue: string}>(
   'user/swipeProfile',
   async function ({uid, isLike}, {rejectWithValue, dispatch}) {
@@ -138,6 +181,7 @@ export const createChat = createAsyncThunk<Chat, string, {rejectValue: string}>(
         user: doc(db, 'users', auth.currentUser!.uid),
         name: likedUser!.name,
         lastMessage: 'Новый чат',
+        lastMsgId: null,
       });
       // for matched user
       await addDoc(collection(db, 'users_chats'), {
@@ -146,13 +190,15 @@ export const createChat = createAsyncThunk<Chat, string, {rejectValue: string}>(
         user: doc(db, 'users', likedUid),
         name: auth.currentUser!.displayName,
         lastMessage: 'Новый чат',
+        lastMsgId: null,
       });
       return {
         avatarURL: likedUser!.avatarURL,
         chatId: refChatDoc.id,
         uid: auth.currentUser!.uid,
         name: likedUser!.name,
-        lastMessage: 'Новый чат'
+        lastMessage: 'Новый чат',
+        lastMsgId: null,
       };
     } catch (error) {
       const typedError = error as Error;
@@ -161,24 +207,28 @@ export const createChat = createAsyncThunk<Chat, string, {rejectValue: string}>(
   }
 );
 
-export const addMessage = createAsyncThunk<Message, {textValue: string, senderId: string, chatId: string}, {rejectValue: string}>(
+export const addMessage = createAsyncThunk<void, {textValue: string, senderId: string, chatId: string}, {rejectValue: string}>(
   'user/addMessage',
   async function ({textValue, senderId, chatId}, {rejectWithValue, dispatch}) {
     try {
-      const refMsg = await addDoc(collection(db, 'messages'), {
+      const msgId = uuidv4();
+      await setDoc(doc(db, 'messages', msgId), {
         chat: doc(db, 'chats', chatId),
         senderId: doc(db, '/users/', senderId),
         text: textValue,
+        lastMsgId: msgId,
         createdAt: serverTimestamp(),
       });
       dispatch(updateLastMessage({
-        chatId, lastMessage: textValue
+        chatId,
+        lastMessage: textValue,
+        lastMsgId: msgId,
       }));
-      return {
-        id: refMsg.id,
-        senderId: senderId,
-        text: textValue,
-      }
+      // return {
+      //   id: msgId,
+      //   senderId: senderId,
+      //   text: textValue,
+      // }
     } catch (error) {
       const typedError = error as Error;
       return rejectWithValue(typedError.message);
@@ -186,9 +236,29 @@ export const addMessage = createAsyncThunk<Message, {textValue: string, senderId
   }
 );
 
-export const updateLastMessage = createAsyncThunk<Omit<Chat, 'name'>, {chatId: string, lastMessage: string}, {rejectValue: string}>(
+export const fetchNewMessage = createAsyncThunk<Message, string, {rejectValue: string}>(
+  'user/fetchNewMessage',
+  async function (msgId, {rejectWithValue}) {
+    try {
+      const msgDoc = await getDoc(doc(db, 'messages', msgId));
+      const msgData = msgDoc.data();
+
+      return {
+        id: msgId,
+        senderId: msgData!.senderId.id,
+        text: msgData!.text,
+      }
+    } catch (error) {
+      const typedError = error as Error;
+      console.log('error: ', typedError.message);
+      return rejectWithValue(typedError.message);
+    }
+  }
+);
+
+export const updateLastMessage = createAsyncThunk<Omit<Chat, 'name'>, {chatId: string, lastMessage: string, lastMsgId: string}, {rejectValue: string}>(
   'user/updateLastMessage',
-  async function ({chatId, lastMessage}, {rejectWithValue}) {
+  async function ({chatId, lastMessage, lastMsgId}, {rejectWithValue}) {
     try {
       const refChat = doc(db, 'chats', chatId);
       const docData = await getDocs(query(
@@ -199,6 +269,7 @@ export const updateLastMessage = createAsyncThunk<Omit<Chat, 'name'>, {chatId: s
       docData.forEach(doc => {
         updateDoc(doc.ref, {
           lastMessage,
+          lastMsgId,
         });
       });
       return {
@@ -212,6 +283,13 @@ export const updateLastMessage = createAsyncThunk<Omit<Chat, 'name'>, {chatId: s
   }
 );
 
+export const logOut = createAsyncThunk(
+  'user/logOut',
+  async function () {
+    await signOut(auth);
+  }
+);
+
 type userState = {
   isLoading: boolean,
   isLoggedIn: boolean,
@@ -222,11 +300,15 @@ type userState = {
   },
   matches: {
     chats: Array<Chat>,
-    profiles: Array<Profile>,
     isLoading: boolean,
     error: string | null,
   },
   messages: {
+    currentProfile: {
+      info: Profile | null,
+      isLoading: boolean,
+      error: string | null,
+    },
     info: Array<Message>,
     isLoading: boolean,
     error: string | null,
@@ -243,11 +325,15 @@ const initialState: userState = {
   },
   matches: {
     chats: [],
-    profiles: [],
     isLoading: true,
     error: null,
   },
   messages: {
+    currentProfile: {
+      info: null,
+      isLoading: true,
+      error: null,
+    },
     info: [],
     isLoading: true,
     error: null,
@@ -316,9 +402,12 @@ const userSlice = createSlice({
         state.messages.isLoading = false;
         state.matches.error = action.payload!;
       })
-      .addCase(addMessage.fulfilled, (state, action) => {
+      .addCase(fetchNewMessage.fulfilled, (state, action) => {
         state.messages.info.push(action.payload);
       })
+      // .addCase(addMessage.fulfilled, (state, action) => {
+      //   state.messages.info.push(action.payload);
+      // })
       .addCase(updateLastMessage.fulfilled, (state, action) => {
         state.matches.chats = state.matches.chats.map(item => {
           if (item.chatId === action.payload.chatId) {
@@ -326,6 +415,21 @@ const userSlice = createSlice({
           }
           return item;
         });
+      })
+      // .addCase(fetchChatProfile.pending, (state, action) => {
+      //   state.messages.currentProfile.isLoading = true;
+      //   state.messages.currentProfile.error = null;
+      // })
+      // .addCase(fetchChatProfile.fulfilled, (state, action) => {
+      //   state.messages.currentProfile.isLoading = false;
+      //   state.messages.currentProfile.info = action.payload;
+      // })
+      // .addCase(fetchChatProfile.rejected, (state, action) => {
+      //   state.messages.currentProfile.isLoading = false;
+      //   state.messages.currentProfile.error = action.payload!;
+      // })
+      .addCase(logOut.fulfilled, (state) => {
+        state = initialState;
       });
   }
 });
