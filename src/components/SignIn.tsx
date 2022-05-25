@@ -1,16 +1,22 @@
 import React from 'react';
 
-import {signInWithEmailAndPassword } from "firebase/auth";
-import {auth} from "../firebase";
+import {signInWithEmailAndPassword, updateCurrentUser} from "firebase/auth";
+import {auth} from "../firebase.config";
 
-import {Link, useNavigate} from "react-router-dom";
-import styles from "./elements.module.css";
+import {Link, useLocation, useNavigate} from "react-router-dom";
+import styles from "components/elements.module.css";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {IAuthFormFields} from "../types";
 import cn from "classnames";
+import {setIsLoggedIn} from "../store/slices/userSlice";
+import {useAppDispatch} from "../hooks/redux-hooks";
+
+type locationState = { from: string };
 
 const SignIn = () => {
   const navigate = useNavigate()
+  const location = useLocation();
+  const fromPage = (location.state as locationState)?.from ?? '/';
   const {
     register,
     formState: { errors },
@@ -20,25 +26,28 @@ const SignIn = () => {
     mode: 'onBlur'
   });
 
-  const handleLogin: SubmitHandler<IAuthFormFields> = ({email, pass}) => {
-    signInWithEmailAndPassword(auth, email, pass)
-      .then((userCredential) => {
-        navigate('/');
-      })
-      .catch(err => {
-        switch (err.code) {
-          case 'auth/invalid-email':
-            return setError('email', { message: 'Некорректный email' });
-          case 'auth/user-disabled':
-            return setError('email', { message: 'Аккаунт заблокирован' });
-          case 'auth/user-not-found':
-            return setError('email', { message: 'Аккаунт не найден' });
-          case 'auth/wrong-password':
-            return setError('pass', { message: 'Неверный пароль' });
-          default:
-            return setError('email', { message: err.message });
-        }
-      });
+  const dispatch = useAppDispatch();
+
+  const handleLogin: SubmitHandler<IAuthFormFields> = async ({email, pass}) => {
+    try {
+      const {user} = await signInWithEmailAndPassword(auth, email, pass);
+      dispatch(setIsLoggedIn(true));
+      await updateCurrentUser(auth, user);
+      navigate(fromPage);
+    } catch (err: any) {
+      switch (err.code) {
+        case 'auth/invalid-email':
+          return setError('email', {message: 'Некорректный email'});
+        case 'auth/user-disabled':
+          return setError('email', {message: 'Аккаунт заблокирован'});
+        case 'auth/user-not-found':
+          return setError('email', {message: 'Аккаунт не найден'});
+        case 'auth/wrong-password':
+          return setError('pass', {message: 'Неверный пароль'});
+        default:
+          return setError('email', {message: err.message});
+      }
+    }
   }
 
   return (

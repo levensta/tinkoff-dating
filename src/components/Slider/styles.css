@@ -1,0 +1,20 @@
+:root {
+  --swiper-theme-color: #FFF;
+}
+
+.swiper {
+  @apply w-full h-full;
+}
+
+.swiper-slide img {
+  @apply block w-full h-full object-cover
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  @apply hover:opacity-60 transition-opacity drop-shadow;
+}
+
+.swiper-pagination-progressbar-fill {
+  @apply drop-shadow;
+}
