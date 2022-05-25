@@ -1,17 +1,19 @@
-import React, {FormEvent} from 'react';
+import React from 'react';
 
-import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile, updateCurrentUser, reload} from "firebase/auth";
+import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile, updateCurrentUser} from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import {auth, db} from "firebase.config";
 
-import {Link, useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
 import styles from "components/elements.module.css";
 import cn from "classnames";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {IRegisterFormFields} from "../types";
+import {setIsLoggedIn} from "../store/slices/userSlice";
+import {useAppDispatch} from "../hooks/redux-hooks";
 
 const SignUp = () => {
-  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const {
     register,
     formState: { errors },
@@ -21,53 +23,42 @@ const SignUp = () => {
     mode: 'onBlur'
   });
 
-  // @ts-ignore
-  const handleRegister: SubmitHandler<IRegisterFormFields> = async ({email, pass, name}, e: Event) => {
-
-    createUserWithEmailAndPassword(auth, email, pass)
-      .then(async (userCredential) => {
-        const {user} = userCredential;
-        await sendEmailVerification(user);
-        await updateProfile(user, {
-          displayName: name
-        });
-        updateCurrentUser(auth, user)
-          .then(() => reload(user)
-            .then(() => navigate('/')));
-        await setDoc(doc(db, "users", user.uid), {
-          id: user.uid,
-          avatarURL: user.photoURL,
-          name: name,
-          age: null,
-          city: null,
-          description: null,
-          photosURLs: [],
-          tagsInterests: [],
-          _likedProfiles: [],
-          _watchedProfiles: [user.uid],
-          isHiddenProfile: false,
-          isHiddenAge: false,
-        });
-      })
-      .catch(err => {
-        switch (err.code) {
-          case 'auth/email-already-in-use':
-            return setError('email', { message: 'Аккаунт с такой почтой уже существует' });
-          case 'auth/weak-password':
-            return setError('pass', { message: 'Ненадежный пароль' });
-          default:
-            return setError('email', { message: err.message });
-        }
+  const handleRegister: SubmitHandler<IRegisterFormFields> = async ({email, pass, name}) => {
+    try {
+      const {user} = await createUserWithEmailAndPassword(auth, email, pass);
+      await sendEmailVerification(user);
+      await updateProfile(user, {
+        displayName: name
       });
-  }
-
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    handleSubmit(handleRegister)();
+      await updateCurrentUser(auth, user);
+      setDoc(doc(db, 'users', user.uid), {
+        id: user.uid,
+        avatarURL: user.photoURL,
+        name: name,
+        age: null,
+        city: null,
+        description: null,
+        photosURLs: [],
+        tagsInterests: [],
+        _likedProfiles: [],
+        _watchedProfiles: [user.uid],
+        isHiddenProfile: true,
+        isHiddenAge: false,
+      }).then(() => dispatch(setIsLoggedIn(true)));
+    } catch (err: any) {
+      switch (err.code) {
+        case 'auth/email-already-in-use':
+          return setError('email', { message: 'Аккаунт с такой почтой уже существует' });
+        case 'auth/weak-password':
+          return setError('pass', { message: 'Ненадежный пароль' });
+        default:
+          return setError('email', { message: err.message });
+      }
+    }
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={handleSubmit(handleRegister)}>
       <fieldset className={"flex flex-col items-center"}>
         <h1 className={"text-2xl font-medium"}>Регистрация</h1>
         <div className={"flex flex-col w-full my-3"}>

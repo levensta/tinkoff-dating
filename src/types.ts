@@ -8,7 +8,7 @@ export interface IRegisterFormFields extends IAuthFormFields {
   photo: string,
 }
 
-export interface Profile {
+export interface IProfile {
   id: string,
   avatarURL?: string,
   name: string,
@@ -23,14 +23,14 @@ export interface Profile {
   isHiddenAge?: boolean,
 }
 
-export interface Chat {
+export interface IChat {
   avatarURL?: string,
   chatId: string,
   name: string,
   lastMessage: string
 }
 
-export interface Message {
+export interface IMessage {
   id: string,
   senderId: string,
   text: string,

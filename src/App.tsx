@@ -60,6 +60,7 @@ function App() {
 
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, (userInfo) => {
+      console.log(1)
       if (userInfo) {
         dispatch(setIsLoggedIn(true));
       } else {
@@ -67,15 +68,13 @@ function App() {
       }
       dispatch(setIsLoading(false));
     });
-    return () => {
-      subscriber();
-    }
+    return subscriber();
   }, []);
 
   const {isLoading, isLoggedIn} = useAppSelector(state => state.user);
 
   return (
-    isLoading ? <ScreenLoader/> :
+    isLoading ? null :
       <Suspense fallback={<ScreenLoader/>}>
         {isLoggedIn ? <AuthenticatedApp /> : <UnauthenticatedApp />}
       </Suspense>

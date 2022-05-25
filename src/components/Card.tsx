@@ -1,8 +1,8 @@
 import React from 'react';
 import Slider from "components/Slider/Slider";
-import {Profile} from "types";
+import {IProfile} from "types";
 
-interface ICard extends Omit<Profile, 'id' | '_likedProfiles' | '_watchedProfiles'> {
+interface ICard extends Omit<IProfile, 'id' | '_likedProfiles' | '_watchedProfiles'> {
   index: number
 }
 
